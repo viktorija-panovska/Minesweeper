@@ -20,6 +20,7 @@ namespace Minesweeper
         }
     }
 
+
     public partial class MainMenu : Form
     {
         readonly Label title;
@@ -38,7 +39,7 @@ namespace Minesweeper
             new Difficulty("Expert", 30, 16, 99)
         };
 
-        int difficultyIndex = 0;
+        int difficultyIndex = 0;        // which difficulty the difficulty selector is currently pointing at
 
         public MainMenu()
         {
@@ -81,7 +82,7 @@ namespace Minesweeper
                 Font = new Font("Segoe UI", 20F, FontStyle.Regular, GraphicsUnit.Point),
                 BackColor = Color.White,
             };
-            decreaseDifficulty.Click += new EventHandler((sender, e) => decreaseDifficulty_OnClick(sender, e));
+            decreaseDifficulty.Click += new EventHandler(DecreaseDifficulty_OnClick);
 
             increaseDifficulty = new Button()
             {
@@ -92,7 +93,7 @@ namespace Minesweeper
                 Font = new Font("Segoe UI", 20F, FontStyle.Regular, GraphicsUnit.Point),
                 BackColor = Color.White,
             };
-            increaseDifficulty.Click += new EventHandler((sender, e) => increaseDifficulty_OnClick(sender, e));
+            increaseDifficulty.Click += new EventHandler(IncreaseDifficulty_OnClick);
 
             boardSize = new Label()
             {
@@ -123,7 +124,7 @@ namespace Minesweeper
                 Font = new Font("Segoe UI", 20F, FontStyle.Regular, GraphicsUnit.Point),
                 BackColor = Color.White,
             };
-            startGame.Click += new EventHandler((sender, e) => startGame_OnClick(sender, e));
+            startGame.Click += new EventHandler(StartGame_OnClick);
 
 
             // Form properties
@@ -151,7 +152,7 @@ namespace Minesweeper
             Application.Exit();
         }
 
-        private void decreaseDifficulty_OnClick(object sender, EventArgs e)
+        private void DecreaseDifficulty_OnClick(object sender, EventArgs e)
         {
             difficultyIndex--;
             if (difficultyIndex < 0)
@@ -160,7 +161,7 @@ namespace Minesweeper
             UpdateLabels();
         }
 
-        private void increaseDifficulty_OnClick(object sender, EventArgs e)
+        private void IncreaseDifficulty_OnClick(object sender, EventArgs e)
         {
             difficultyIndex++;
             if (difficultyIndex >= difficulties.Length)
@@ -176,11 +177,13 @@ namespace Minesweeper
             numMines.Text = $"Number of mines:\n{difficulties[difficultyIndex].Mines}";
         }
 
-        private void startGame_OnClick(object sender, EventArgs e)
+        private void StartGame_OnClick(object sender, EventArgs e)
         {
-            GameWindow gw = new GameWindow(difficulties[difficultyIndex].BoardWidth, difficulties[difficultyIndex].BoardHeight, difficulties[difficultyIndex].Mines);
+            GameWindow game = new GameWindow(difficulties[difficultyIndex].BoardWidth, 
+                                             difficulties[difficultyIndex].BoardHeight, 
+                                             difficulties[difficultyIndex].Mines);
             Hide();
-            gw.Show();
+            game.Show();
         }
     }
 }
