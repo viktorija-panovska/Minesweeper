@@ -2,13 +2,17 @@
 
 public class Board
 {
-	private Cell[,] board;
+	private readonly Cell[,] board;
 
 	public int Width { get; }
 
 	public int Height { get; }
 
 	public int Mines { get; }
+
+	public int FlaggedCells { get; set; }
+
+	public int HiddenCells { get; set; }
 
 
 	public Board(int width, int height, int mines)
@@ -18,6 +22,8 @@ public class Board
 		Width = width;
 		Height = height;
 		Mines = mines;
+		FlaggedCells = 0;
+		HiddenCells = width * height;
 
 		FillBoard();
 	}
@@ -25,6 +31,7 @@ public class Board
 	public Cell GetCell(int x, int y) => board[y, x];
 
 
+	// Sets the cells that are occupied by mines and counts the number of adjacent mines for the other cells
 	private void FillBoard()
     {
 		PlaceMines();
@@ -39,7 +46,7 @@ public class Board
         }
     }
 
-
+	// Sets cells at random coordinates in the board to be mines
 	private void PlaceMines()
     {
 		Random ranGen = new Random();
@@ -58,7 +65,7 @@ public class Board
 		}
 	}
 
-
+	// Counts the number of mines in the 8 cells surrounding each cell that doesn't contain a mine
 	private int CountAdjacentMines(int x, int y)
     {
 		int count = 0;
@@ -76,5 +83,20 @@ public class Board
         }
 
 		return count;
+    }
+
+
+	// Returns true if all mines have been correctly flagged and the rest of the cells have been revealed
+	public bool IsGameWon()
+    {
+		if (HiddenCells > 0)
+			return false;
+
+		for (int x = 0; x < Width; ++x)
+			for (int y = 0; y < Height; ++y)
+				if (board[y, x].GetState() == State.Flagged && !(board[y, x] is MineCell))
+					return false;
+
+		return true;
     }
 }

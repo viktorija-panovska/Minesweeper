@@ -9,26 +9,33 @@ public class Cell
 
 	public Cell()
 	{
-		state = State.Hidden;
+		Hide();
 	}
 
+	public State GetState() => state;
+
+	// Sets the state of the cell to Flagged
 	public void Flag()
     {
 		state = State.Flagged;
     }
 
+	// Sets the state of the cell to Revealed
 	public void Reveal()
 	{
 		state = State.Revealed;
     }
 
-	public State GetState() => state;
+	// Sets the state of the cell to Hidden
+	public void Hide()
+    {
+		state = State.Hidden;
+    }
 }
 
 
 public class MineCell : Cell
 {
-
 }
 
 
