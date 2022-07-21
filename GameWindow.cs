@@ -36,22 +36,20 @@ namespace Minesweeper
 
 		public GameWindow(int boardWidth, int boardHeight, int mines)
 		{
-			board = new Board(boardWidth, boardHeight, mines, GameWon, GameLost);
-
 			// Form properties
 			Name = "Minesweeper";
 			BackColor = Color.Gray;
-			ClientSize = new Size((board.Width * 35) + 100, (board.Height * 35) + 100);
+			ClientSize = new Size((boardWidth * 35) + 100, (boardHeight * 35) + 100);
 			StartPosition = FormStartPosition.CenterScreen;
 			FormBorderStyle = FormBorderStyle.FixedSingle;
 			MaximizeBox = false;
 
 
+			SetBoard(boardWidth, boardHeight, mines);
+
 			SetMinesDisplay();
 
 			SetTimerDisplay();
-
-			SetBoardDisplay();
 
 
 			// Event to shut down the entire program when the window is closed
@@ -59,7 +57,38 @@ namespace Minesweeper
 		}
 
 
+
 		// -- SETUP --
+
+		// Initializes the game board, the tile grid representing the game board and the click events for every tile
+		private void SetBoard(int width, int height, int mines)
+		{
+			// initialize visual representation of the board - the grid
+			grid = new Tile[height, width];
+
+			for (int y = 0; y < height; ++y)
+			{
+				for (int x = 0; x < width; ++x)
+				{
+					PictureBox button = new PictureBox()
+					{
+						Location = new Point(x * 35 + 50, y * 35 + 80),
+						Size = new Size(35, 35),
+						SizeMode = PictureBoxSizeMode.StretchImage,
+					};
+					grid[y, x] = new Tile(x, y, button);
+					Controls.Add(button);
+				}
+			}
+
+			// populate the board
+			board = new Board(width, height, mines, GameWon, GameLost, RefreshTile);
+
+			// initialize click events
+			foreach (Tile tile in grid)
+				tile.Button.MouseClick += new MouseEventHandler((sender, e) => OnClick(sender, e, tile));
+		}
+
 
 		// Initializes minesLabel and minesDisplay
 		private void SetMinesDisplay()
@@ -128,30 +157,6 @@ namespace Minesweeper
 			timerDisplay.Text = seconds.ToString();
 		}
 
-		// Initializes the tile grid representing the game board and the click events for every tile
-		private void SetBoardDisplay()
-		{
-			grid = new Tile[board.Height, board.Width];
-
-			for (int y = 0; y < board.Height; ++y)
-			{
-				for (int x = 0; x < board.Width; ++x)
-				{
-					PictureBox button = new PictureBox()
-					{
-						Location = new Point(x * 35 + 50, y * 35 + 80),
-						Size = new Size(35, 35),
-						Image = board.GetCellImage(x, y),
-						SizeMode = PictureBoxSizeMode.StretchImage,
-					};
-					grid[y, x] = new Tile(x, y, button);
-					Controls.Add(button);
-				}
-			}
-
-			foreach (Tile tile in grid)
-				tile.Button.MouseClick += new MouseEventHandler((sender, e) => OnClick(sender, e, tile));
-		}
 
 
 
@@ -176,25 +181,20 @@ namespace Minesweeper
 		// 
 		private void RevealTile(Tile tile)
 		{
-			if (board.Reveal(tile.X, tile.Y))
-            {
-				tile.Button.Image = board.GetCellImage(tile.X, tile.Y);
-
-				if (board.IsCellEmpty(tile.X, tile.Y))
-					for (int dx = -1; dx <= 1; ++dx)
-						for (int dy = -1; dy <= 1; ++dy)
-							if (tile.X + dx < board.Width && tile.X + dx >= 0 &&
-								tile.Y + dy < board.Height && tile.Y + dy >= 0)
-								RevealTile(grid[tile.Y + dy, tile.X + dx]);
-			}
+			board.Reveal(tile.X, tile.Y);
 		}
 
 
 		private void FlagTile(Tile tile)
 		{
 			board.Flag(tile.X, tile.Y);
-			minesDisplay.Text = (board.Mines - board.FlaggedCells).ToString();
-			tile.Button.Image = board.GetCellImage(tile.X, tile.Y);
+			minesDisplay.Text = board.RemainingMines.ToString();
+		}
+
+
+		private void RefreshTile(int x, int y, Image image)
+        {
+			grid[y, x].Button.Image = image;
 		}
 
 
@@ -204,13 +204,6 @@ namespace Minesweeper
 		private void GameLost()
 		{
 			timer.Stop();
-
-            foreach (Tile tile in grid)
-            {
-				tile.Button.Image = board.GetCellImage(tile.X, tile.Y);
-				tile.Button.Enabled = false;
-            }
-
             GameOverScreen gameOver = new GameOverScreen();
             gameOver.Show();
         }

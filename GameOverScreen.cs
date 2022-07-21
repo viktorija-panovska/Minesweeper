@@ -20,7 +20,7 @@ public class GameOverScreen : Form
             Font = new Font("Segoe UI", 25F, FontStyle.Bold, GraphicsUnit.Point),
         };
         Controls.Add(text);
-
+         
         Button playAgain = new Button()
         {
             Location = new Point(22, 100),
@@ -37,7 +37,6 @@ public class GameOverScreen : Form
 
     private void OnClick(object sender, MouseEventArgs e)
     {
-        Application.Exit();
-
+        Close();
     }
 }

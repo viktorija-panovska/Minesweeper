@@ -1,49 +1,47 @@
 ﻿using System;
 using System.Drawing;
+using System.Timers;
 
 namespace Minesweeper
 {
 	public class Board
 	{
 		public delegate void GameOverFunc();
-
+		public delegate void RefreshCellDisplay(int x, int y, Image image);
 
 		private readonly Cell[,] board;
-
 		public int Width { get; }
-
 		public int Height { get; }
-
 		public int Mines { get; }
+		public int RemainingMines { get; private set; }
 
-		public int FlaggedCells { get; private set; }
-
-		private int hiddenCells;
+		private int flagged;
+		private int correctlyFlagged;
 
 		private GameOverFunc gameWon;
-		private GameOverFunc gameLost;		
+		private GameOverFunc gameLost;
+		private RefreshCellDisplay refresh;
 
 
-		public Board(int width, int height, int mines, GameOverFunc gameWon, GameOverFunc gameLost)
+		public Board(int width, int height, int mines, GameOverFunc gameWon, GameOverFunc gameLost, RefreshCellDisplay refresh)
 		{
 			board = new Cell[height, width];
 
 			Width = width;
 			Height = height;
 			Mines = mines;
+			RemainingMines = mines;
 
-			FlaggedCells = 0;
-			hiddenCells = width * height;
+			flagged = 0;
+			correctlyFlagged = 0;
 
 			this.gameWon = gameWon;
 			this.gameLost = gameLost;
+			this.refresh = refresh;
 
 			FillBoard();
 		}
 
-		public Image GetCellImage(int x, int y) => board[y, x].Image;
-
-		public bool IsCellEmpty(int x, int y) => board[y, x] is FreeCell freeCell && freeCell.AdjacentMines == 0;
 
 
 		// -- SETUP --
@@ -58,7 +56,11 @@ namespace Minesweeper
 				for (int x = 0; x < Width; ++x)
 				{
 					if (board[y, x] == null)
+                    {
 						board[y, x] = new FreeCell(CountAdjacentMines(x, y));
+						refresh(x, y, board[y, x].Image);
+					}
+						
 				}
 			}
 		}
@@ -78,6 +80,7 @@ namespace Minesweeper
 				{
 					board[y, x] = new MineCell();
 					remainingMines--;
+					refresh(x, y, board[y, x].Image);
 				}
 			}
 		}
@@ -109,13 +112,20 @@ namespace Minesweeper
 				return false;
 
 			cell.Reveal();
-			hiddenCells--;
+			refresh(x, y, cell.Image);
 
 			if (cell is MineCell)
 				GameLost();
 				
 			if (IsGameWon())
 				GameWon();
+
+			if (board[y, x] is FreeCell freeCell && freeCell.AdjacentMines == 0)
+				for (int dx = -1; dx <= 1; ++dx)
+					for (int dy = -1; dy <= 1; ++dy)
+						if (x + dx < Width && x + dx >= 0 &&
+							y + dy < Height && y + dy >= 0)
+							Reveal(x + dx, y + dy);
 
 			return true;
         }
@@ -126,45 +136,58 @@ namespace Minesweeper
 			if (cell.State == CellState.Hidden)
             {
 				cell.Flag();
-				FlaggedCells++;
+				flagged++;
+
+				if (cell is MineCell)
+					correctlyFlagged++;
+
+				RemainingMines--;
+
+				if (IsGameWon())
+					GameWon();
 			}
 			else if (cell.State == CellState.Flagged)
             {
 				cell.Hide();
-				FlaggedCells--;
+				flagged--;
+
+				if (cell is MineCell)
+					correctlyFlagged--;
+
+				RemainingMines++;
 			}
+
+			refresh(x, y, cell.Image);
         }
 
-
-
-		// Returns true if all mines have been correctly flagged and the rest of the cells have been revealed
-		public bool IsGameWon()
-		{
-			if (hiddenCells - FlaggedCells != 0)
-				return false;
 		
-			for (int x = 0; x < Width; ++x)
-				for (int y = 0; y < Height; ++y)
-					if (board[y, x].State == CellState.Flagged && !(board[y, x] is MineCell))
-						return false;				
 
-			return true;
-		}
+		// -- ENDGAME --
 
+		public bool IsGameWon() => correctlyFlagged == Mines && correctlyFlagged == flagged;
 
 		public void GameLost()
         {
-			foreach (Cell cell in board)
+			for (int x = 0; x < Width; ++x)
             {
-				if (cell is FreeCell && cell.State == CellState.Flagged)
-					cell.WrongFlag();
-				else if (cell is MineCell)
-					cell.Reveal();
-			}
+				for (int y = 0; y < Height; ++y)
+                {
+					Cell cell = board[y, x];
+
+					if (cell.State != CellState.Revealed)
+					{
+						if (cell is FreeCell && cell.State == CellState.Flagged)
+							cell.WrongFlag();
+						else if (cell is MineCell)
+							cell.Reveal();
+					}
+
+					refresh(x, y, cell.Image);
+				}
+            }
 				
 			gameLost();
         }
-
 
 		public void GameWon()
         {
