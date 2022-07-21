@@ -1,42 +1,29 @@
 ﻿using System;
 using System.Drawing;
-using System.Diagnostics;
 using System.Windows.Forms;
 
 
 namespace Minesweeper
 {
 	struct Tile
-    {
+	{
 		public int X { get; }
 		public int Y { get; }
 		public PictureBox Button { get; }
 
 		public Tile(int x, int y, PictureBox button)
-        {
+		{
 			X = x;
 			Y = y;
 			Button = button;
-        }
-    }
+		}
+	}
 
 
 	public class GameWindow : Form
 	{
-		private readonly Image[] numberTiles = {
-			Properties.Resources.Zero,
-			Properties.Resources.One,
-			Properties.Resources.Two,
-			Properties.Resources.Three,
-			Properties.Resources.Four,
-			Properties.Resources.Five,
-			Properties.Resources.Six,
-			Properties.Resources.Seven,
-			Properties.Resources.Eight
-		};
-
-		private Board board;		// logical representation of the game board
-		private Tile[,] grid;		// visual representation of the game board
+		private Board board;        // logical representation of the game board
+		private Tile[,] grid;       // visual representation of the game board
 
 		private Label minesLabel;
 		private Label minesDisplay;
@@ -49,7 +36,7 @@ namespace Minesweeper
 
 		public GameWindow(int boardWidth, int boardHeight, int mines)
 		{
-			board = new Board(boardHeight, boardWidth, mines);
+			board = new Board(boardWidth, boardHeight, mines, GameWon, GameLost);
 
 			// Form properties
 			Name = "Minesweeper";
@@ -71,6 +58,8 @@ namespace Minesweeper
 			FormClosing += new FormClosingEventHandler(GameWindow_FormClosing);
 		}
 
+
+		// -- SETUP --
 
 		// Initializes minesLabel and minesDisplay
 		private void SetMinesDisplay()
@@ -100,7 +89,7 @@ namespace Minesweeper
 
 		// Initializes timerLabel, timerDisplay and the timer counting every second
 		private void SetTimerDisplay()
-        {
+		{
 			timerLabel = new Label()
 			{
 				Size = new Size(200, 30),
@@ -141,7 +130,7 @@ namespace Minesweeper
 
 		// Initializes the tile grid representing the game board and the click events for every tile
 		private void SetBoardDisplay()
-        {
+		{
 			grid = new Tile[board.Height, board.Width];
 
 			for (int y = 0; y < board.Height; ++y)
@@ -152,7 +141,7 @@ namespace Minesweeper
 					{
 						Location = new Point(x * 35 + 50, y * 35 + 80),
 						Size = new Size(35, 35),
-						Image = Properties.Resources.Tile,
+						Image = board.GetCellImage(x, y),
 						SizeMode = PictureBoxSizeMode.StretchImage,
 					};
 					grid[y, x] = new Tile(x, y, button);
@@ -161,15 +150,18 @@ namespace Minesweeper
 			}
 
 			foreach (Tile tile in grid)
-				tile.Button.MouseClick += new MouseEventHandler((sender, e) => OnClick(sender, e, tile));				
-		}		
+				tile.Button.MouseClick += new MouseEventHandler((sender, e) => OnClick(sender, e, tile));
+		}
 
 
+
+		// -- GAMEPLAY --
+	
 		// Handles the left click or right click functionality
 		private void OnClick(object sender, MouseEventArgs e, Tile tile)
-        {
+		{
 			switch (e.Button)
-            {
+			{
 				case MouseButtons.Left:
 					RevealTile(tile);
 					break;
@@ -177,89 +169,62 @@ namespace Minesweeper
 				case MouseButtons.Right:
 					FlagTile(tile);
 					break;
-            }
-        }
+			}
+		}
 
+		 
 		// 
 		private void RevealTile(Tile tile)
-        {
-			Cell cell = board.GetCell(tile.X, tile.Y);
-
-			if (cell.GetState() != State.Revealed && cell is MineCell)
-				GameOver();
-
-
-			if (cell.GetState() != State.Revealed && cell is FreeCell freeCell)
-			{
-				tile.Button.Image = numberTiles[freeCell.AdjacentMines];
-				tile.Button.Enabled = false;
-				cell.Reveal();
-				board.HiddenCells--;
-
-				if (freeCell.AdjacentMines == 0)
-                {
-					for (int dx = -1; dx <= 1; ++dx)
-					{
-						for (int dy = -1; dy <= 1; ++dy)
-						{
-							if (tile.X + dx >= grid.GetLength(1) || tile.X + dx < 0 || tile.Y + dy >= grid.GetLength(0) || tile.Y + dy < 0)
-								continue;
-							else
-								RevealTile(grid[tile.Y + dy, tile.X + dx]);
-						}
-					}
-				}
-			}
-		}
-
-
-		// Flags tile if it is not flagged, unflags it otherwise
-		private void FlagTile(Tile tile)
-        {
-			Cell cell = board.GetCell(tile.X, tile.Y);
-
-			if (cell.GetState() == State.Hidden)
-			{
-				tile.Button.Image = Properties.Resources.Flag;
-				cell.Flag();
-				board.FlaggedCells++;
-			}
-			else if (cell.GetState() == State.Flagged)
+		{
+			if (board.Reveal(tile.X, tile.Y))
             {
-				tile.Button.Image = Properties.Resources.Tile;
-				cell.Hide();
-				board.FlaggedCells--;
-			}
+				tile.Button.Image = board.GetCellImage(tile.X, tile.Y);
 
+				if (board.IsCellEmpty(tile.X, tile.Y))
+					for (int dx = -1; dx <= 1; ++dx)
+						for (int dy = -1; dy <= 1; ++dy)
+							if (tile.X + dx < board.Width && tile.X + dx >= 0 &&
+								tile.Y + dy < board.Height && tile.Y + dy >= 0)
+								RevealTile(grid[tile.Y + dy, tile.X + dx]);
+			}
+		}
+
+
+		private void FlagTile(Tile tile)
+		{
+			board.Flag(tile.X, tile.Y);
 			minesDisplay.Text = (board.Mines - board.FlaggedCells).ToString();
+			tile.Button.Image = board.GetCellImage(tile.X, tile.Y);
 		}
 
 
 
-		private void GameOver()
+		// -- GAME OVER --
+
+		private void GameLost()
 		{
 			timer.Stop();
-			
-			foreach (Tile tile in grid)
-            {
-                if (board.GetCell(tile.X, tile.Y) is MineCell)
-					tile.Button.Image = Properties.Resources.Mine;
 
+            foreach (Tile tile in grid)
+            {
+				tile.Button.Image = board.GetCellImage(tile.X, tile.Y);
 				tile.Button.Enabled = false;
             }
 
-            // game over mark
+            GameOverScreen gameOver = new GameOverScreen();
+            gameOver.Show();
         }
 
 		private void GameWon()
-        {
+		{
 			timer.Stop();
 			Leaderboard leaderboard = new Leaderboard(seconds);
-			Hide();
 			leaderboard.Show();
 		}
 
 
+
+		// -- UTILITY --
 
 		private void GameWindow_FormClosing(object sender, FormClosingEventArgs e)
 		{
@@ -268,5 +233,3 @@ namespace Minesweeper
 
 	}
 }
-
-
