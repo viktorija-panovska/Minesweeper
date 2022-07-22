@@ -34,18 +34,18 @@ namespace Minesweeper
 		private Label timerDisplay;
 
 
-		public GameWindow(int boardWidth, int boardHeight, int mines)
+		public GameWindow(Difficulty difficulty)
 		{
 			// Form properties
 			Name = "Minesweeper";
 			BackColor = Color.Gray;
-			ClientSize = new Size((boardWidth * 35) + 100, (boardHeight * 35) + 100);
+			ClientSize = new Size((difficulty.BoardWidth * 35) + 100, (difficulty.BoardHeight * 35) + 100);
 			StartPosition = FormStartPosition.CenterScreen;
 			FormBorderStyle = FormBorderStyle.FixedSingle;
 			MaximizeBox = false;
 
 
-			SetBoard(boardWidth, boardHeight, mines);
+			SetBoard(difficulty);
 
 			SetMinesDisplay();
 
@@ -61,14 +61,14 @@ namespace Minesweeper
 		// -- SETUP --
 
 		// Initializes the game board, the tile grid representing the game board and the click events for every tile
-		private void SetBoard(int width, int height, int mines)
+		private void SetBoard(Difficulty difficulty)
 		{
 			// initialize visual representation of the board - the grid
-			grid = new Tile[height, width];
+			grid = new Tile[difficulty.BoardHeight, difficulty.BoardWidth];
 
-			for (int y = 0; y < height; ++y)
+			for (int y = 0; y < difficulty.BoardHeight; ++y)
 			{
-				for (int x = 0; x < width; ++x)
+				for (int x = 0; x < difficulty.BoardWidth; ++x)
 				{
 					PictureBox button = new PictureBox()
 					{
@@ -82,13 +82,12 @@ namespace Minesweeper
 			}
 
 			// populate the board
-			board = new Board(width, height, mines, GameWon, GameLost, RefreshTile);
+			board = new Board(difficulty, GameWon, GameLost, RefreshTile);
 
 			// initialize click events
 			foreach (Tile tile in grid)
 				tile.Button.MouseClick += new MouseEventHandler((sender, e) => OnClick(sender, e, tile));
 		}
-
 
 		// Initializes minesLabel and minesDisplay
 		private void SetMinesDisplay()
@@ -159,7 +158,6 @@ namespace Minesweeper
 
 
 
-
 		// -- GAMEPLAY --
 	
 		// Handles the left click or right click functionality
@@ -177,20 +175,17 @@ namespace Minesweeper
 			}
 		}
 
-		 
 		// 
 		private void RevealTile(Tile tile)
 		{
 			board.Reveal(tile.X, tile.Y);
 		}
 
-
 		private void FlagTile(Tile tile)
 		{
 			board.Flag(tile.X, tile.Y);
 			minesDisplay.Text = board.RemainingMines.ToString();
 		}
-
 
 		private void RefreshTile(int x, int y, Image image)
         {
@@ -211,8 +206,8 @@ namespace Minesweeper
 		private void GameWon()
 		{
 			timer.Stop();
-			Leaderboard leaderboard = new Leaderboard(seconds);
-			leaderboard.Show();
+			GameWonScreen gameWon = new GameWonScreen(board.Difficulty);
+			gameWon.Show();
 		}
 
 
@@ -223,6 +218,5 @@ namespace Minesweeper
 		{
 			Application.Exit();
 		}
-
 	}
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using System.Timers;
 
 namespace Minesweeper
 {
@@ -10,10 +9,13 @@ namespace Minesweeper
 		public delegate void RefreshCellDisplay(int x, int y, Image image);
 
 		private readonly Cell[,] board;
-		public int Width { get; }
-		public int Height { get; }
-		public int Mines { get; }
-		public int RemainingMines { get; private set; }
+
+		public Difficulty Difficulty { get; }
+
+		public int Width { get => Difficulty.BoardWidth; }
+		public int Height { get => Difficulty.BoardHeight; }
+		public int Mines { get => Difficulty.Mines; }
+		public int RemainingMines { get => Difficulty.Mines - flagged; }
 
 		private int flagged;
 		private int correctlyFlagged;
@@ -23,14 +25,10 @@ namespace Minesweeper
 		private RefreshCellDisplay refresh;
 
 
-		public Board(int width, int height, int mines, GameOverFunc gameWon, GameOverFunc gameLost, RefreshCellDisplay refresh)
+		public Board(Difficulty difficulty, GameOverFunc gameWon, GameOverFunc gameLost, RefreshCellDisplay refresh)
 		{
-			board = new Cell[height, width];
-
-			Width = width;
-			Height = height;
-			Mines = mines;
-			RemainingMines = mines;
+			this.Difficulty = difficulty;
+			board = new Cell[Height, Width];
 
 			flagged = 0;
 			correctlyFlagged = 0;
@@ -141,8 +139,6 @@ namespace Minesweeper
 				if (cell is MineCell)
 					correctlyFlagged++;
 
-				RemainingMines--;
-
 				if (IsGameWon())
 					GameWon();
 			}
@@ -153,8 +149,6 @@ namespace Minesweeper
 
 				if (cell is MineCell)
 					correctlyFlagged--;
-
-				RemainingMines++;
 			}
 
 			refresh(x, y, cell.Image);

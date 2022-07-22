@@ -4,7 +4,7 @@ using System.Windows.Forms;
 
 namespace Minesweeper
 {
-    struct Difficulty
+    public struct Difficulty
     {
         public string Name { get; }
         public int BoardWidth { get; }
@@ -179,9 +179,7 @@ namespace Minesweeper
 
         private void StartGame_OnClick(object sender, EventArgs e)
         {
-            GameWindow game = new GameWindow(difficulties[difficultyIndex].BoardWidth, 
-                                             difficulties[difficultyIndex].BoardHeight, 
-                                             difficulties[difficultyIndex].Mines);
+            GameWindow game = new GameWindow(difficulties[difficultyIndex]);
             Hide();
             game.Show();
         }
