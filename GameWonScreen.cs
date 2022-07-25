@@ -6,12 +6,8 @@ namespace Minesweeper
 {
     public class GameWonScreen : Form
     {
-        private Difficulty difficulty;
-
-        public GameWonScreen(Difficulty difficulty)
+        public GameWonScreen()
         {
-            this.difficulty = difficulty;
-
             // Form properties
             BackColor = Color.Gray;
             ClientSize = new Size(300, 250);
@@ -56,14 +52,12 @@ namespace Minesweeper
 
         private void PlayAgain_OnClick(object sender, MouseEventArgs e)
         {
-            Close();
+            FormSwitcher.Reset();
         }
 
         private void Leaderboard_OnClick(object sender, MouseEventArgs e)
         {
-            Leaderboard leaderboard = new Leaderboard(difficulty);
-            leaderboard.Show();
-            Hide();
+            FormSwitcher.ShowLeaderboard();
         }
     }
 }

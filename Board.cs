@@ -48,19 +48,7 @@ namespace Minesweeper
 		private void FillBoard()
 		{
 			PlaceMines();
-
-			for (int y = 0; y < Height; ++y)
-			{
-				for (int x = 0; x < Width; ++x)
-				{
-					if (board[y, x] == null)
-                    {
-						board[y, x] = new FreeCell(CountAdjacentMines(x, y));
-						refresh(x, y, board[y, x].Image);
-					}
-						
-				}
-			}
+			PlaceFreeCells();
 		}
 
 		// Sets cells at random coordinates in the board to be mines
@@ -79,6 +67,21 @@ namespace Minesweeper
 					board[y, x] = new MineCell();
 					remainingMines--;
 					refresh(x, y, board[y, x].Image);
+				}
+			}
+		}
+
+		private void PlaceFreeCells()
+        {
+			for (int y = 0; y < Height; ++y)
+			{
+				for (int x = 0; x < Width; ++x)
+				{
+					if (board[y, x] == null)
+					{
+						board[y, x] = new FreeCell(CountAdjacentMines(x, y));
+						refresh(x, y, board[y, x].Image);
+					}
 				}
 			}
 		}

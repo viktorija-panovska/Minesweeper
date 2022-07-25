@@ -6,7 +6,7 @@ namespace Minesweeper
     {
         static void Main()
         {
-            Application.Run(new MainMenu());
+            Application.Run(new FormSwitcher());
         }
     }
 }

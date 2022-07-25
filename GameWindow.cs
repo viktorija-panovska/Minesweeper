@@ -41,8 +41,21 @@ namespace Minesweeper
 			BackColor = Color.Gray;
 			ClientSize = new Size((difficulty.BoardWidth * 35) + 100, (difficulty.BoardHeight * 35) + 100);
 			StartPosition = FormStartPosition.CenterScreen;
-			FormBorderStyle = FormBorderStyle.FixedSingle;
+			FormBorderStyle = FormBorderStyle.None;
 			MaximizeBox = false;
+
+
+			Button exit = new Button()
+			{
+				Location = new Point(ClientSize.Width - 30, 5),
+				Size = new Size(20, 20),
+				Text = "X",
+				TextAlign = ContentAlignment.MiddleCenter,
+				Font = new Font("Segoe UI", 10F, FontStyle.Bold, GraphicsUnit.Point),
+				BackColor = Color.Red
+			};
+			Controls.Add(exit);
+			exit.MouseClick += new MouseEventHandler(Exit_OnClick);
 
 
 			SetBoard(difficulty);
@@ -54,6 +67,12 @@ namespace Minesweeper
 
 			// Event to shut down the entire program when the window is closed
 			FormClosing += new FormClosingEventHandler(GameWindow_FormClosing);
+		}
+
+
+		private void Exit_OnClick(object sender, MouseEventArgs e)
+		{
+			Application.Exit();
 		}
 
 
@@ -199,24 +218,23 @@ namespace Minesweeper
 		private void GameLost()
 		{
 			timer.Stop();
-            GameOverScreen gameOver = new GameOverScreen();
-            gameOver.Show();
+			FormSwitcher.ShowGameOver();
         }
 
 		private void GameWon()
 		{
 			timer.Stop();
-			GameWonScreen gameWon = new GameWonScreen(board.Difficulty);
-			gameWon.Show();
+			FormSwitcher.ShowGameWon();
 		}
 
 
 
-		// -- UTILITY --
+        // -- UTILITY --
 
-		private void GameWindow_FormClosing(object sender, FormClosingEventArgs e)
-		{
-			Application.Exit();
+        private void GameWindow_FormClosing(object sender, FormClosingEventArgs e)
+        {
+			if (e.CloseReason == CloseReason.WindowsShutDown)
+				Application.Exit();
 		}
-	}
+    }
 }

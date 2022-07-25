@@ -23,14 +23,9 @@ namespace Minesweeper
 
     public partial class MainMenu : Form
     {
-        readonly Label title;
-        readonly Label chooseDifficulty;
-        readonly Label difficulty;
-        readonly Button decreaseDifficulty;
-        readonly Button increaseDifficulty;
-        readonly Label boardSize;
-        readonly Label numMines;
-        readonly Button startGame;
+        private readonly Label difficulty;
+        private readonly Label boardSize;
+        private readonly Label numMines;
 
         readonly Difficulty[] difficulties =
         {
@@ -43,116 +38,129 @@ namespace Minesweeper
 
         public MainMenu()
         {
-            title = new Label()
+            // Form properties
+            Name = "Minesweeper";
+            BackColor = Color.Gray;
+            ClientSize = new Size(500, 500);
+            StartPosition = FormStartPosition.CenterScreen;
+            FormBorderStyle = FormBorderStyle.None;
+            MaximizeBox = false;
+
+
+            Button exit = new Button()
             {
-                Location = new Point(75, 30),
+                Location = new Point(ClientSize.Width - 40, 10),
+                Size = new Size(30, 30),
+                Text = "X",
+                TextAlign = ContentAlignment.MiddleCenter,
+                Font = new Font("Segoe UI", 15F, FontStyle.Bold, GraphicsUnit.Point),
+                BackColor = Color.Red
+            };
+            Controls.Add(exit);
+            exit.MouseClick += new MouseEventHandler(Exit_OnClick);
+
+            Label title = new Label()
+            {
+                Location = new Point(75, 50),
                 Size = new Size(350, 50),
                 Text = "MINESWEEPER",
                 TextAlign = ContentAlignment.MiddleCenter,
                 Font = new Font("Segoe UI", 30F, FontStyle.Bold, GraphicsUnit.Point),
                 ForeColor = Color.Black
             };
+            Controls.Add(title);
 
-            chooseDifficulty = new Label()
+            Label chooseDifficulty = new Label()
             {
-                Location = new Point(170, 110),
+                Location = new Point(170, 130),
                 Size = new Size(150, 50),
                 Text = "Difficulty:",
                 TextAlign = ContentAlignment.MiddleCenter,
                 Font = new Font("Segoe UI", 15F, FontStyle.Bold, GraphicsUnit.Point),
                 ForeColor = Color.Black
             };
+            Controls.Add(chooseDifficulty);
 
             difficulty = new Label()
             {
-                Location = new Point(170, 150),
+                Location = new Point(170, 170),
                 Size = new Size(150, 40),
                 Text = difficulties[difficultyIndex].Name,
                 TextAlign = ContentAlignment.MiddleCenter,
                 Font = new Font("Segoe UI", 15F, FontStyle.Bold, GraphicsUnit.Point),
                 ForeColor = Color.Black
             };
+            Controls.Add(difficulty);
 
-            decreaseDifficulty = new Button()
+            Button decreaseDifficulty = new Button()
             {
-                Location = new Point(120, 152),
+                Location = new Point(120, 172),
                 Size = new Size(35, 35),
                 Text = "<",
                 TextAlign = ContentAlignment.MiddleCenter,
                 Font = new Font("Segoe UI", 20F, FontStyle.Regular, GraphicsUnit.Point),
                 BackColor = Color.White,
             };
-            decreaseDifficulty.Click += new EventHandler(DecreaseDifficulty_OnClick);
+            Controls.Add(decreaseDifficulty);
+            decreaseDifficulty.MouseClick += new MouseEventHandler(DecreaseDifficulty_OnClick);
 
-            increaseDifficulty = new Button()
+            Button increaseDifficulty = new Button()
             {
-                Location = new Point(330, 152),
+                Location = new Point(330, 172),
                 Size = new Size(35, 35),
                 Text = ">",
                 TextAlign = ContentAlignment.MiddleCenter,
                 Font = new Font("Segoe UI", 20F, FontStyle.Regular, GraphicsUnit.Point),
                 BackColor = Color.White,
             };
-            increaseDifficulty.Click += new EventHandler(IncreaseDifficulty_OnClick);
+            Controls.Add(increaseDifficulty);
+            increaseDifficulty.MouseClick += new MouseEventHandler(IncreaseDifficulty_OnClick);
 
             boardSize = new Label()
             {
-                Location = new Point(170, 230),
+                Location = new Point(170, 250),
                 Size = new Size(150, 40),
                 Text = $"Board size:\n{difficulties[difficultyIndex].BoardWidth}x{difficulties[difficultyIndex].BoardHeight}",
                 TextAlign = ContentAlignment.MiddleCenter,
                 Font = new Font("Segoe UI", 15F, FontStyle.Bold, GraphicsUnit.Point),
                 ForeColor = Color.Black
             };
+            Controls.Add(boardSize);
 
             numMines = new Label()
             {
-                Location = new Point(145, 300),
+                Location = new Point(145, 320),
                 Size = new Size(200, 40),
                 Text = $"Number of mines:\n{difficulties[difficultyIndex].Mines}",
                 TextAlign = ContentAlignment.MiddleCenter,
                 Font = new Font("Segoe UI", 15F, FontStyle.Bold, GraphicsUnit.Point),
                 ForeColor = Color.Black
             };
+            Controls.Add(numMines);
 
-            startGame = new Button()
+            Button startGame = new Button()
             {
-                Location = new Point(195, 380),
+                Location = new Point(195, 400),
                 Size = new Size(100, 50),
                 Text = "START",
                 TextAlign = ContentAlignment.MiddleCenter,
                 Font = new Font("Segoe UI", 20F, FontStyle.Regular, GraphicsUnit.Point),
                 BackColor = Color.White,
             };
-            startGame.Click += new EventHandler(StartGame_OnClick);
-
-
-            // Form properties
-            Name = "Minesweeper";
-            BackColor = Color.Gray;
-            ClientSize = new Size(500, 500);
-            StartPosition = FormStartPosition.CenterScreen;
-            FormBorderStyle = FormBorderStyle.FixedSingle;
-            MaximizeBox = false;
-            Controls.Add(title);
-            Controls.Add(chooseDifficulty);
-            Controls.Add(difficulty);
-            Controls.Add(decreaseDifficulty);
-            Controls.Add(increaseDifficulty);
-            Controls.Add(boardSize);
-            Controls.Add(numMines);
             Controls.Add(startGame);
+            startGame.MouseClick += new MouseEventHandler(StartGame_OnClick);
 
             // Event to shut down the entire program when the window is closed
-            FormClosing += new FormClosingEventHandler(MainMenu_FormClosing);
+            FormClosing += new FormClosingEventHandler(GameWindow_FormClosing);
         }
 
-        private void MainMenu_FormClosing(object sender, FormClosingEventArgs e)
+        private void GameWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
-            Application.Exit();
+            if (e.CloseReason == CloseReason.WindowsShutDown)
+                Application.Exit();
         }
 
-        private void DecreaseDifficulty_OnClick(object sender, EventArgs e)
+        private void DecreaseDifficulty_OnClick(object sender, MouseEventArgs e)
         {
             difficultyIndex--;
             if (difficultyIndex < 0)
@@ -161,7 +169,7 @@ namespace Minesweeper
             UpdateLabels();
         }
 
-        private void IncreaseDifficulty_OnClick(object sender, EventArgs e)
+        private void IncreaseDifficulty_OnClick(object sender, MouseEventArgs e)
         {
             difficultyIndex++;
             if (difficultyIndex >= difficulties.Length)
@@ -177,11 +185,15 @@ namespace Minesweeper
             numMines.Text = $"Number of mines:\n{difficulties[difficultyIndex].Mines}";
         }
 
-        private void StartGame_OnClick(object sender, EventArgs e)
+        private void StartGame_OnClick(object sender, MouseEventArgs e)
         {
-            GameWindow game = new GameWindow(difficulties[difficultyIndex]);
-            Hide();
-            game.Show();
+            GameState.Difficulty = difficulties[difficultyIndex];
+            FormSwitcher.ShowGameWindow();
+        }
+
+        private void Exit_OnClick(object sender, MouseEventArgs e)
+        {
+            Application.Exit();
         }
     }
 }
