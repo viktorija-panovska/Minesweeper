@@ -29,7 +29,6 @@ namespace Minesweeper
 		private Label minesDisplay;
 
 		private Timer timer;
-		private int seconds;
 		private Label timerLabel;
 		private Label timerDisplay;
 
@@ -160,7 +159,7 @@ namespace Minesweeper
 			{
 				Size = new Size(190, 50),
 				Location = new Point(ClientSize.Width - 200, 30),
-				Text = seconds.ToString(),
+				Text = board.PlayTime.ToString(),
 				TextAlign = ContentAlignment.MiddleCenter,
 				Font = new Font("Segoe UI", 15F, FontStyle.Bold, GraphicsUnit.Point),
 				ForeColor = Color.Black
@@ -171,8 +170,8 @@ namespace Minesweeper
 		// Increments the timer every second and updates the timerDisplay
 		private void OnTick(object sender, EventArgs e)
 		{
-			seconds++;
-			timerDisplay.Text = seconds.ToString();
+			board.IncrementTime();
+			timerDisplay.Text = board.PlayTime.ToString();
 		}
 
 

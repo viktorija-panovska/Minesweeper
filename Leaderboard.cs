@@ -1,5 +1,5 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 
@@ -7,7 +7,9 @@ namespace Minesweeper
 {
     public class Leaderboard : Form
     {
-        private ListBox scores;
+        private ListBox scoresDisplay;
+        private List<HighScore>[] scores;
+        private int scoresIndex;
 
         public Leaderboard()
         {
@@ -17,6 +19,8 @@ namespace Minesweeper
             ClientSize = new Size(500, 600);
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.None;
+
+            scores = new List<HighScore>[3];
 
             Button exit = new Button()
             {
@@ -29,6 +33,7 @@ namespace Minesweeper
             };
             Controls.Add(exit);
             exit.MouseClick += new MouseEventHandler(Exit_OnClick);
+
 
             SetDifficultySelect();
 
@@ -56,7 +61,7 @@ namespace Minesweeper
                 Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point),
             };
             Controls.Add(beginner);
-            beginner.MouseClick += new MouseEventHandler(OpenBeginnerList);
+            beginner.MouseClick += new MouseEventHandler((sender, e) => OpenList(sender, e, DifficultyName.Beginner));
 
             Button intermediate = new Button()
             {
@@ -68,7 +73,7 @@ namespace Minesweeper
                 Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point),
             };
             Controls.Add(intermediate);
-            intermediate.MouseClick += new MouseEventHandler(OpenIntermediateList);
+            intermediate.MouseClick += new MouseEventHandler((sender, e) => OpenList(sender, e, DifficultyName.Intermediate));
 
             Button expert = new Button()
             {
@@ -80,7 +85,7 @@ namespace Minesweeper
                 Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point),
             };
             Controls.Add(expert);
-            expert.MouseClick += new MouseEventHandler(OpenExpertList);
+            expert.MouseClick += new MouseEventHandler((sender, e) => OpenList(sender, e, DifficultyName.Expert));
         }
 
         private void SetScoreOrder()
@@ -92,7 +97,7 @@ namespace Minesweeper
                 Text = "Chronological",
                 TextAlign = ContentAlignment.TopCenter,
                 BackColor = Color.White,
-                Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point),
+                Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point)
             };
             Controls.Add(chronologicalOrder);
             chronologicalOrder.MouseClick += new MouseEventHandler(ChronologicalSort);
@@ -112,65 +117,58 @@ namespace Minesweeper
 
         private void SetScores()
         {
-            scores = new ListBox()
+            scoresDisplay = new ListBox()
             {
                 Location = new Point(20, 160),
                 Size = new Size(460, 430),
-                BackColor = Color.Gray
+                BackColor = Color.Gray,
+                Font = new Font("Segoe UI", 15F, FontStyle.Regular, GraphicsUnit.Point),
+                SelectionMode = SelectionMode.None
             };
-            Controls.Add(scores);
+            Controls.Add(scoresDisplay);
 
-            switch (GameState.Difficulty.Name)
-            {
-                case "Beginner":
-                    OpenBeginnerList();
-                    break;
-                case "Intermediate":
-                    OpenIntermediateList();
-                    break;
-                case "Expert":
-                    OpenExpertList();
-                    break;
-            }
+            OpenList(GameState.Difficulty.Name);
         }
 
 
-        private void OpenBeginnerList()
+        private void UpdateScoresDisplay()
         {
-            System.Diagnostics.Debug.WriteLine("Beginner");
-        }
-        private void OpenBeginnerList(object sender, MouseEventArgs e)
-        {
-            OpenBeginnerList();
+            scoresDisplay.Items.Clear();
+
+            scoresDisplay.Items.Add($"{"DATE",18} {"PLAY TIME",42}");
+
+            foreach (var score in scores[scoresIndex])
+                scoresDisplay.Items.Add($"{score.DateTime.Day:D2}:{score.DateTime.Month:D2}:{score.DateTime.Year:D4}  " +
+                    $"{score.DateTime.Hour:D2}:{score.DateTime.Minute:D2}:{score.DateTime.Second:D2}" +
+                    $"{score.PlayTime + "s",30}");
         }
 
-        private void OpenIntermediateList()
+        private void OpenList(DifficultyName difficulty)
         {
-            System.Diagnostics.Debug.WriteLine("Intermediate");
-        }
-        private void OpenIntermediateList(object sender, MouseEventArgs e)
-        {
-            OpenIntermediateList();
+            scoresIndex = (int)difficulty;
+
+            if (scores[scoresIndex] == null)
+                scores[scoresIndex] = ScoreManager.LoadScores(difficulty);
+
+            UpdateScoresDisplay();
         }
 
-        private void OpenExpertList()
+        private void OpenList(object sender, MouseEventArgs e, DifficultyName difficulty)
         {
-            System.Diagnostics.Debug.WriteLine("Expert");
-        }
-        private void OpenExpertList(object sender, MouseEventArgs e)
-        {
-            OpenExpertList();
+            OpenList(difficulty);
         }
 
 
         private void ChronologicalSort(object sender, MouseEventArgs e)
         {
-
+            scores[scoresIndex].Sort((a, b) => a.DateTime.CompareTo(b.DateTime));
+            UpdateScoresDisplay();
         }
 
         private void TimeSort(object sender, MouseEventArgs e)
         {
-
+            scores[scoresIndex].Sort((a, b) => a.PlayTime.CompareTo(b.PlayTime));
+            UpdateScoresDisplay();
         }
     }
 }

@@ -14,6 +14,7 @@ namespace Minesweeper
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.None;
 
+
             Label text = new Label()
             {
                 Location = new Point(22, 40),
@@ -23,6 +24,7 @@ namespace Minesweeper
                 Font = new Font("Segoe UI", 25F, FontStyle.Bold, GraphicsUnit.Point),
             };
             Controls.Add(text);
+
 
             Button playAgain = new Button()
             {

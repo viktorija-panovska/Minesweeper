@@ -16,18 +16,19 @@ namespace Minesweeper
 		public int Height { get => Difficulty.BoardHeight; }
 		public int Mines { get => Difficulty.Mines; }
 		public int RemainingMines { get => Difficulty.Mines - flagged; }
+		public int PlayTime { get; private set; }
 
 		private int flagged;
 		private int correctlyFlagged;
 
-		private GameOverFunc gameWon;
-		private GameOverFunc gameLost;
-		private RefreshCellDisplay refresh;
+		private readonly GameOverFunc gameWon;
+		private readonly GameOverFunc gameLost;
+		private readonly RefreshCellDisplay refresh;
 
 
 		public Board(Difficulty difficulty, GameOverFunc gameWon, GameOverFunc gameLost, RefreshCellDisplay refresh)
 		{
-			this.Difficulty = difficulty;
+			Difficulty = difficulty;
 			board = new Cell[Height, Width];
 
 			flagged = 0;
@@ -157,6 +158,7 @@ namespace Minesweeper
 			refresh(x, y, cell.Image);
         }
 
+		public void IncrementTime() => PlayTime++;
 		
 
 		// -- ENDGAME --
@@ -188,7 +190,12 @@ namespace Minesweeper
 
 		public void GameWon()
         {
-			// save game state
+			ScoreManager.SaveScore(new HighScore()
+			{
+				Difficulty = Difficulty.Name,
+				PlayTime = PlayTime,
+				DateTime = DateTime.Now
+			});
 
 			gameWon();
         }

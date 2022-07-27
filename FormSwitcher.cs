@@ -9,7 +9,10 @@ namespace Minesweeper
 		public FormSwitcher()
 		{
 			Shown += new EventHandler(OnShown);
+
+			// Initialize the empty stack of forms
 			GameState.OpenForms = new Stack<Form>();
+
 			ShowMainMenu();
 		}
 
@@ -18,7 +21,7 @@ namespace Minesweeper
 			Hide();
 		}
 
-		public static void ShowMainMenu()
+		private static void ShowMainMenu()
         {
 			GameState.OpenForms.Push(new MainMenu());
 			GameState.CurrentForm.Show();
@@ -49,6 +52,7 @@ namespace Minesweeper
 			GameState.CurrentForm.Show();
 		}
 
+		// Closes all forms except the Main Menu, which will be reused
 		public static void Reset()
         {
 			while (GameState.OpenForms.Count > 1)

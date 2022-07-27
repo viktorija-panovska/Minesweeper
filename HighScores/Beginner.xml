@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfHighScore xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <HighScore>
+    <Difficulty>Beginner</Difficulty>
+    <DateTime>2022-07-27T17:08:37.9702661+02:00</DateTime>
+    <PlayTime>30</PlayTime>
+  </HighScore>
+  <HighScore>
+    <Difficulty>Beginner</Difficulty>
+    <DateTime>2022-07-27T17:09:11.5016174+02:00</DateTime>
+    <PlayTime>24</PlayTime>
+  </HighScore>
+  <HighScore>
+    <Difficulty>Beginner</Difficulty>
+    <DateTime>2022-07-27T22:59:35.6576857+02:00</DateTime>
+    <PlayTime>31</PlayTime>
+  </HighScore>
+</ArrayOfHighScore>

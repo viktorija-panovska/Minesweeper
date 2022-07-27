@@ -1,25 +1,8 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows.Forms;
 
 namespace Minesweeper
 {
-    public struct Difficulty
-    {
-        public string Name { get; }
-        public int BoardWidth { get; }
-        public int BoardHeight { get; }
-        public int Mines { get; }
-
-        public Difficulty(string name, int boardWidth, int boardHeight, int mines)
-        {
-            Name = name;
-            BoardWidth = boardWidth;
-            BoardHeight = boardHeight;
-            Mines = mines;
-        }
-    }
-
 
     public partial class MainMenu : Form
     {
@@ -29,9 +12,9 @@ namespace Minesweeper
 
         readonly Difficulty[] difficulties =
         {
-            new Difficulty("Beginner", 9, 9, 10),
-            new Difficulty("Intermediate", 16, 16, 40),
-            new Difficulty("Expert", 30, 16, 99)
+            new Difficulty(DifficultyName.Beginner, 9, 9, 10),
+            new Difficulty(DifficultyName.Intermediate, 16, 16, 40),
+            new Difficulty(DifficultyName.Expert, 30, 16, 99)
         };
 
         int difficultyIndex = 0;        // which difficulty the difficulty selector is currently pointing at
@@ -85,7 +68,7 @@ namespace Minesweeper
             {
                 Location = new Point(170, 170),
                 Size = new Size(150, 40),
-                Text = difficulties[difficultyIndex].Name,
+                Text = difficulties[difficultyIndex].Name.ToString(),
                 TextAlign = ContentAlignment.MiddleCenter,
                 Font = new Font("Segoe UI", 15F, FontStyle.Bold, GraphicsUnit.Point),
                 ForeColor = Color.Black
@@ -180,7 +163,7 @@ namespace Minesweeper
 
         private void UpdateLabels()
         {
-            difficulty.Text = difficulties[difficultyIndex].Name;
+            difficulty.Text = difficulties[difficultyIndex].Name.ToString();
             boardSize.Text = $"Board size:\n{difficulties[difficultyIndex].BoardWidth}x{difficulties[difficultyIndex].BoardHeight}";
             numMines.Text = $"Number of mines:\n{difficulties[difficultyIndex].Mines}";
         }
