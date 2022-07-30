@@ -178,7 +178,6 @@ namespace Minesweeper
 
 		// -- GAMEPLAY --
 	
-		// Handles the left click or right click functionality
 		private void OnClick(object sender, MouseEventArgs e, Tile tile)
 		{
 			switch (e.Button)
@@ -193,7 +192,6 @@ namespace Minesweeper
 			}
 		}
 
-		// 
 		private void RevealTile(Tile tile)
 		{
 			board.Reveal(tile.X, tile.Y);

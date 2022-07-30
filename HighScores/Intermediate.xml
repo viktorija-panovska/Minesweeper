@@ -15,4 +15,24 @@
     <DateTime>2022-07-27T22:36:47.0504243+02:00</DateTime>
     <PlayTime>220</PlayTime>
   </HighScore>
+  <HighScore>
+    <Difficulty>Intermediate</Difficulty>
+    <DateTime>2022-07-29T14:23:40.1865107+02:00</DateTime>
+    <PlayTime>129</PlayTime>
+  </HighScore>
+  <HighScore>
+    <Difficulty>Intermediate</Difficulty>
+    <DateTime>2022-07-29T15:01:01.6693657+02:00</DateTime>
+    <PlayTime>155</PlayTime>
+  </HighScore>
+  <HighScore>
+    <Difficulty>Intermediate</Difficulty>
+    <DateTime>2022-07-30T11:07:23.7173376+02:00</DateTime>
+    <PlayTime>162</PlayTime>
+  </HighScore>
+  <HighScore>
+    <Difficulty>Intermediate</Difficulty>
+    <DateTime>2022-07-30T13:40:15.0103489+02:00</DateTime>
+    <PlayTime>270</PlayTime>
+  </HighScore>
 </ArrayOfHighScore>
