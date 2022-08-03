@@ -2,7 +2,7 @@
 
 namespace Minesweeper
 {
-	public enum CellState { Hidden, Revealed, Flagged }
+	public enum CellState { Hidden, Revealed, Flagged, Blocked }
 
 
 	public class Cell
@@ -14,31 +14,34 @@ namespace Minesweeper
 
 		public Cell()
 		{
+			// all cells start off hidden
 			Hide();
 		}
 
 
-		// Sets the state of the cell to Hidden
+		public void Block()
+        {
+			State = CellState.Blocked;
+        }
+
 		public void Hide()
 		{
 			State = CellState.Hidden;
 			Image = Properties.Resources.Tile;
 		}
 
-		// Sets the state of the cell to Flagged
 		public void Flag()
 		{
 			State = CellState.Flagged;
 			Image = Properties.Resources.Flag;
 		}
 
-		// Sets the state of the cell to Revealed
 		public virtual void Reveal()
 		{
 			State = CellState.Revealed;
 		}
 
-
+		// Called to highlight a cell that has been flagged but it doesn't hide a mine
 		public void WrongFlag()
         {
 			Image = Properties.Resources.WrongFlag;

@@ -3,21 +3,23 @@ using System.Windows.Forms;
 
 namespace Minesweeper
 {
-
-    public partial class MainMenu : Form
+    public class MainMenu : Form
     {
-        private readonly Label difficulty;
-        private readonly Label boardSize;
-        private readonly Label numMines;
+        private const string invalidNameChars = "\\/?*|:<>";
 
-        readonly Difficulty[] difficulties =
+        private Label difficulty;
+        private Label boardSize;
+        private Label numMines;
+        private TextBox playerNameEntry;
+
+        private readonly Difficulty[] difficulties =
         {
             new Difficulty(DifficultyName.Beginner, 9, 9, 10),
             new Difficulty(DifficultyName.Intermediate, 16, 16, 40),
             new Difficulty(DifficultyName.Expert, 30, 16, 99)
         };
 
-        int difficultyIndex = 0;        // which difficulty the difficulty selector is currently pointing at
+        private int difficultyIndex = 0;        // which difficulty the difficulty selector is currently pointing at
 
         public MainMenu()
         {
@@ -27,8 +29,6 @@ namespace Minesweeper
             ClientSize = new Size(500, 500);
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.None;
-            MaximizeBox = false;
-
 
             Button exit = new Button()
             {
@@ -53,73 +53,9 @@ namespace Minesweeper
             };
             Controls.Add(title);
 
-            Label chooseDifficulty = new Label()
-            {
-                Location = new Point(170, 130),
-                Size = new Size(150, 50),
-                Text = "Difficulty:",
-                TextAlign = ContentAlignment.MiddleCenter,
-                Font = new Font("Segoe UI", 15F, FontStyle.Bold, GraphicsUnit.Point),
-                ForeColor = Color.Black
-            };
-            Controls.Add(chooseDifficulty);
+            ShowPlayerNameEntry();
 
-            difficulty = new Label()
-            {
-                Location = new Point(170, 170),
-                Size = new Size(150, 40),
-                Text = difficulties[difficultyIndex].Name.ToString(),
-                TextAlign = ContentAlignment.MiddleCenter,
-                Font = new Font("Segoe UI", 15F, FontStyle.Bold, GraphicsUnit.Point),
-                ForeColor = Color.Black
-            };
-            Controls.Add(difficulty);
-
-            Button decreaseDifficulty = new Button()
-            {
-                Location = new Point(120, 172),
-                Size = new Size(35, 35),
-                Text = "<",
-                TextAlign = ContentAlignment.MiddleCenter,
-                Font = new Font("Segoe UI", 20F, FontStyle.Regular, GraphicsUnit.Point),
-                BackColor = Color.White,
-            };
-            Controls.Add(decreaseDifficulty);
-            decreaseDifficulty.MouseClick += new MouseEventHandler(DecreaseDifficulty_OnClick);
-
-            Button increaseDifficulty = new Button()
-            {
-                Location = new Point(330, 172),
-                Size = new Size(35, 35),
-                Text = ">",
-                TextAlign = ContentAlignment.MiddleCenter,
-                Font = new Font("Segoe UI", 20F, FontStyle.Regular, GraphicsUnit.Point),
-                BackColor = Color.White,
-            };
-            Controls.Add(increaseDifficulty);
-            increaseDifficulty.MouseClick += new MouseEventHandler(IncreaseDifficulty_OnClick);
-
-            boardSize = new Label()
-            {
-                Location = new Point(170, 250),
-                Size = new Size(150, 40),
-                Text = $"Board size:\n{difficulties[difficultyIndex].BoardWidth}x{difficulties[difficultyIndex].BoardHeight}",
-                TextAlign = ContentAlignment.MiddleCenter,
-                Font = new Font("Segoe UI", 15F, FontStyle.Bold, GraphicsUnit.Point),
-                ForeColor = Color.Black
-            };
-            Controls.Add(boardSize);
-
-            numMines = new Label()
-            {
-                Location = new Point(145, 320),
-                Size = new Size(200, 40),
-                Text = $"Number of mines:\n{difficulties[difficultyIndex].Mines}",
-                TextAlign = ContentAlignment.MiddleCenter,
-                Font = new Font("Segoe UI", 15F, FontStyle.Bold, GraphicsUnit.Point),
-                ForeColor = Color.Black
-            };
-            Controls.Add(numMines);
+            ShowDifficultySelector();
 
             Button startGame = new Button()
             {
@@ -132,17 +68,111 @@ namespace Minesweeper
             };
             Controls.Add(startGame);
             startGame.MouseClick += new MouseEventHandler(StartGame_OnClick);
-
-            // Event to shut down the entire program when the window is closed
-            FormClosing += new FormClosingEventHandler(GameWindow_FormClosing);
         }
 
-        private void GameWindow_FormClosing(object sender, FormClosingEventArgs e)
+        private void Exit_OnClick(object sender, MouseEventArgs e)
         {
-            if (e.CloseReason == CloseReason.WindowsShutDown)
-                Application.Exit();
+            Application.Exit();
         }
 
+        // Displays the prompt and the text box for player name entry
+        private void ShowPlayerNameEntry()
+        {
+            Label nameLabel = new Label()
+            {
+                Location = new Point(75, 100),
+                Size = new Size(350, 50),
+                Text = "Enter Your Name:",
+                TextAlign = ContentAlignment.MiddleCenter,
+                Font = new Font("Segoe UI", 15F, FontStyle.Bold, GraphicsUnit.Point),
+                ForeColor = Color.Black
+            };
+            Controls.Add(nameLabel);
+
+            playerNameEntry = new TextBox()
+            {
+                Location = new Point(123, 150),
+                Size = new Size(250, 50),
+                Font = new Font("Segoe UI", 15F, FontStyle.Regular, GraphicsUnit.Point),
+                ForeColor = Color.Black
+            };
+            Controls.Add(playerNameEntry);
+        }
+
+        // Displays the prompt for difficulty selection, the arrows for cycling through the difficulties
+        // and the name, board size and number of mines for each difficulty
+        private void ShowDifficultySelector()
+        {
+            Label chooseDifficulty = new Label()
+            {
+                Location = new Point(170, 200),
+                Size = new Size(150, 50),
+                Text = "Difficulty:",
+                TextAlign = ContentAlignment.MiddleCenter,
+                Font = new Font("Segoe UI", 15F, FontStyle.Bold, GraphicsUnit.Point),
+                ForeColor = Color.Black
+            };
+            Controls.Add(chooseDifficulty);
+
+            difficulty = new Label()
+            {
+                Location = new Point(170, 250),
+                Size = new Size(150, 40),
+                Text = difficulties[difficultyIndex].Name.ToString(),
+                TextAlign = ContentAlignment.MiddleCenter,
+                Font = new Font("Segoe UI", 15F, FontStyle.Bold, GraphicsUnit.Point),
+                ForeColor = Color.Black
+            };
+            Controls.Add(difficulty);
+
+            Button decreaseDifficulty = new Button()
+            {
+                Location = new Point(120, 252),
+                Size = new Size(35, 35),
+                Text = "<",
+                TextAlign = ContentAlignment.MiddleCenter,
+                Font = new Font("Segoe UI", 20F, FontStyle.Regular, GraphicsUnit.Point),
+                BackColor = Color.White,
+            };
+            Controls.Add(decreaseDifficulty);
+            decreaseDifficulty.MouseClick += new MouseEventHandler(DecreaseDifficulty_OnClick);
+
+            Button increaseDifficulty = new Button()
+            {
+                Location = new Point(330, 252),
+                Size = new Size(35, 35),
+                Text = ">",
+                TextAlign = ContentAlignment.MiddleCenter,
+                Font = new Font("Segoe UI", 20F, FontStyle.Regular, GraphicsUnit.Point),
+                BackColor = Color.White,
+            };
+            Controls.Add(increaseDifficulty);
+            increaseDifficulty.MouseClick += new MouseEventHandler(IncreaseDifficulty_OnClick);
+
+            boardSize = new Label()
+            {
+                Location = new Point(60, 320),
+                Size = new Size(150, 40),
+                Text = $"Board size:\n{difficulties[difficultyIndex].BoardWidth}x{difficulties[difficultyIndex].BoardHeight}",
+                TextAlign = ContentAlignment.MiddleCenter,
+                Font = new Font("Segoe UI", 15F, FontStyle.Bold, GraphicsUnit.Point),
+                ForeColor = Color.Black
+            };
+            Controls.Add(boardSize);
+
+            numMines = new Label()
+            {
+                Location = new Point(230, 320),
+                Size = new Size(200, 40),
+                Text = $"Number of mines:\n{difficulties[difficultyIndex].Mines}",
+                TextAlign = ContentAlignment.MiddleCenter,
+                Font = new Font("Segoe UI", 15F, FontStyle.Bold, GraphicsUnit.Point),
+                ForeColor = Color.Black
+            };
+            Controls.Add(numMines);
+        }
+
+        // Cycles the difficulties towards the lower difficulty, wrapping around when it reaches the lowest
         private void DecreaseDifficulty_OnClick(object sender, MouseEventArgs e)
         {
             difficultyIndex--;
@@ -152,6 +182,7 @@ namespace Minesweeper
             UpdateLabels();
         }
 
+        // Cycles the difficulties towards the higher difficulty, wrapping around when it reaches the highest
         private void IncreaseDifficulty_OnClick(object sender, MouseEventArgs e)
         {
             difficultyIndex++;
@@ -161,6 +192,7 @@ namespace Minesweeper
             UpdateLabels();
         }
 
+        // Updates the difficulty stats, called when cycling through difficulties
         private void UpdateLabels()
         {
             difficulty.Text = difficulties[difficultyIndex].Name.ToString();
@@ -168,15 +200,31 @@ namespace Minesweeper
             numMines.Text = $"Number of mines:\n{difficulties[difficultyIndex].Mines}";
         }
 
+        // Sets the player name and difficulty for this session and starts the game
         private void StartGame_OnClick(object sender, MouseEventArgs e)
         {
-            GameState.Difficulty = difficulties[difficultyIndex];
-            FormSwitcher.ShowGameWindow();
+            if (playerNameEntry.Text == "")
+                MessageBox.Show("Please enter your name");
+            else if (playerNameEntry.Text.Length > 15)
+                MessageBox.Show("Please enter a name with up to 15 characters");
+            else if (IsInvalidName())
+                MessageBox.Show("Name cannot contain the following characters: " + invalidNameChars);
+            else
+            {
+                GameState.PlayerName = playerNameEntry.Text;
+                GameState.Difficulty = difficulties[difficultyIndex];
+                FormSwitcher.ShowGameWindow();
+            }
         }
 
-        private void Exit_OnClick(object sender, MouseEventArgs e)
+        // Checks if the name provided contains any of the invalid characters
+        private bool IsInvalidName()
         {
-            Application.Exit();
+            foreach (char c in invalidNameChars)
+                if (playerNameEntry.Text.Contains(c))
+                    return true;
+
+            return false;
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Drawing;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Minesweeper
 {
@@ -11,13 +10,12 @@ namespace Minesweeper
 		public delegate void RefreshCellDisplay(int x, int y, Image image);
 
 		private readonly Cell[,] board;
+		private readonly object boardLocker;
 
-		public Difficulty Difficulty { get; }
-
-		public int Width { get => Difficulty.BoardWidth; }
-		public int Height { get => Difficulty.BoardHeight; }
-		public int Mines { get => Difficulty.Mines; }
-		public int RemainingMines { get => Difficulty.Mines - flagged; }
+		public int Width { get => GameState.Difficulty.BoardWidth; }
+		public int Height { get => GameState.Difficulty.BoardHeight; }
+		public int Mines { get => GameState.Difficulty.Mines; }
+		public int RemainingMines { get => GameState.Difficulty.Mines - flagged; }
 		public int PlayTime { get; private set; }
 
 		private const int threadCount = 8;
@@ -30,10 +28,10 @@ namespace Minesweeper
 		private readonly RefreshCellDisplay refresh;
 
 
-		public Board(Difficulty difficulty, GameOverFunc gameWon, GameOverFunc gameLost, RefreshCellDisplay refresh)
+		public Board(GameOverFunc gameWon, GameOverFunc gameLost, RefreshCellDisplay refresh)
 		{
-			Difficulty = difficulty;
 			board = new Cell[Height, Width];
+			boardLocker = new object();
 
 			flagged = 0;
 			correctlyFlagged = 0;
@@ -49,48 +47,70 @@ namespace Minesweeper
 
 		// -- SETUP --
 
-		// Sets the cells that are occupied by mines and counts the number of adjacent mines for the other cells
+		// Sets the cells that are occupied by mines and sets the other cells as free cells
 		private void FillBoard()
 		{
-			PlaceMines();
+			PlaceMines(threadCount, Mines);
 			PlaceFreeCells(0, Height - 1, threadCount);
 		}
 
-		// Sets cells at random coordinates in the board to be mines
-		private void PlaceMines()
-		{
+        // Depending on the number of available threads, chooses either a sequential or parallel divide-and-conquer approach to 
+		// placing the mines randomly on the board
+        private void PlaceMines(int threads, int mines)
+        {
+            if (threads == 1)
+                PlaceRandomMines(mines);
+            else
+            {
+                Thread thread = new Thread(() => PlaceMines(threads / 2, mines / 2));
+                thread.Start();
+
+                PlaceMines(threads - (threads / 2), mines - (mines / 2));
+                thread.Join();
+            }
+        }
+
+		// Places mines at randomly generated coordinates on the board
+        private void PlaceRandomMines(int mines)
+        {
 			Random ranGen = new Random();
 
-			int remainingMines = Mines;
-			while (remainingMines > 0)
+			while (mines > 0)
 			{
 				int x = ranGen.Next(0, Width);
 				int y = ranGen.Next(0, Height);
 
-				if (board[y, x] == null)
-				{
-					board[y, x] = new MineCell();
-					remainingMines--;
-					refresh(x, y, board[y, x].Image);
+				lock (boardLocker)
+                {
+					if (board[y, x] == null)
+					{
+						board[y, x] = new MineCell();
+						mines--;
+					}
 				}
+
+				refresh(x, y, board[y, x].Image);
 			}
 		}
 
-		// Fills out the cells that don't contain mines with empty cells, counting the numebr of adjacent mines they have
+		// Depending on the number of available threads, chooses either a sequential or parallel divide-and-conquer approach to 
+		// setting the free cells
 		private void PlaceFreeCells(int from, int to, int threads)
         {
 			if (threads == 1)
 				FillRow(from, to);
 			else
             {
-				var thread1 = new Thread(() => PlaceFreeCells(from, from + (to - from) / 2, threads / 2));
-				thread1.Start();
+				Thread thread = new Thread(() => PlaceFreeCells(from, from + (to - from) / 2, threads / 2));
+				thread.Start();
 
 				PlaceFreeCells(from + (to - from) / 2 + 1, to, threads - (threads / 2));
-				thread1.Join();
+				thread.Join();
             }
 		}
 
+		// Fills the cells of the given rows that don't contain mines with empty cells,
+		// counting the number of adjacent mines they have
 		private void FillRow(int from, int to)
         {
 			for (int y = from; y <= to; ++y)
@@ -106,7 +126,7 @@ namespace Minesweeper
 			}
 		}
 
-		// Counts the number of mines in the 8 cells surrounding each cell that doesn't contain a mine
+		// Counts the number of mines in the 8 cells surrounding each free cell
 		private int CountAdjacentMines(int x, int y)
 		{
 			int count = 0;
@@ -125,6 +145,7 @@ namespace Minesweeper
 
 		// -- GAMEPLAY --
 
+		// Opens a hidden cell, ending the game if the cell is a mine or opening adjacent free squares if not
 		public bool Reveal(int x, int y)
         {
 			Cell cell = board[y, x];
@@ -137,9 +158,6 @@ namespace Minesweeper
 
 			if (cell is MineCell)
 				GameLost();
-				
-			if (IsGameWon())
-				GameWon();
 
 			if (board[y, x] is FreeCell freeCell && freeCell.AdjacentMines == 0)
 				for (int dx = -1; dx <= 1; ++dx)
@@ -151,6 +169,7 @@ namespace Minesweeper
 			return true;
         }
 
+		// Flags or unflags a cell, depending on the current state of the cell
 		public void Flag(int x, int y)
         {
 			Cell cell = board[y, x];
@@ -161,9 +180,6 @@ namespace Minesweeper
 
 				if (cell is MineCell)
 					correctlyFlagged++;
-
-				if (IsGameWon())
-					GameWon();
 			}
 			else if (cell.State == CellState.Flagged)
             {
@@ -185,27 +201,31 @@ namespace Minesweeper
 
 		public bool IsGameWon() => correctlyFlagged == Mines && correctlyFlagged == flagged;
 
+		// Reveals the locations of all the mines, then goes to the Game Lost screen
 		public void GameLost()
         {
-			MarkMines(0, Height - 1, threadCount);
+			RevealMines(0, Height - 1, threadCount);
 			gameLost();
         }
 
-		private void MarkMines(int from, int to, int threads)
+		// Depending on the number of available threads, chooses either a sequential or parallel divide-and-conquer approach to 
+		// revealing the mines
+		private void RevealMines(int from, int to, int threads)
         {
 			if (threads == 1)
-				MarkRow(from, to);
+				RevealRow(from, to);
 			else
 			{
-				var thread1 = new Thread(() => MarkMines(from, from + (to - from) / 2, threads / 2));
+				var thread1 = new Thread(() => RevealMines(from, from + (to - from) / 2, threads / 2));
 				thread1.Start();
 
-				MarkMines(from + (to - from) / 2 + 1, to, threads - (threads / 2));
+				RevealMines(from + (to - from) / 2 + 1, to, threads - (threads / 2));
 				thread1.Join();
 			}
 		}
 
-		private void MarkRow(int from, int to)
+		// Sequentially reveals the mine cells and highlights the flagged cells that didn't hold mines
+		private void RevealRow(int from, int to)
         {
 			for (int y = from; y <= to; ++y)
 			{
@@ -226,13 +246,16 @@ namespace Minesweeper
 			}
 		}
 
+		// Saves the score and goes to the Game Won screen
 		public void GameWon()
         {
-			ScoreManager.SaveScore(new HighScore()
+			SaveFileManager.SaveScore(new Score()
 			{
-				Difficulty = Difficulty.Name,
+				Difficulty = GameState.Difficulty.Name,
+				PlayerName = GameState.PlayerName,
+				DateTime = DateTime.Now,
 				PlayTime = PlayTime,
-				DateTime = DateTime.Now
+				CorrectlyMarkedMines = correctlyFlagged
 			});
 
 			gameWon();

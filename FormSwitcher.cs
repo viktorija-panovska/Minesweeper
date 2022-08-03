@@ -8,11 +8,13 @@ namespace Minesweeper
 	{
 		public FormSwitcher()
 		{
+			// Hide the form the moment it is supposed to be drawn on the screen
 			Shown += new EventHandler(OnShown);
 
-			// Initialize the empty stack of forms
+			// Initialize the stack for the forms that are to be opened
 			GameState.OpenForms = new Stack<Form>();
 
+			// The game starts with the main menu opened
 			ShowMainMenu();
 		}
 
@@ -23,14 +25,19 @@ namespace Minesweeper
 
 		private static void ShowMainMenu()
         {
+			if (GameState.OpenForms.Count != 0)
+				GameState.CurrentForm.Hide();
+
 			GameState.OpenForms.Push(new MainMenu());
 			GameState.CurrentForm.Show();
 		}
 
 		public static void ShowGameWindow()
-		{ 
-			GameState.CurrentForm.Hide();
-			GameState.OpenForms.Push(new GameWindow(GameState.Difficulty));
+		{
+			if (GameState.OpenForms.Count != 0)
+				GameState.CurrentForm.Hide();
+
+			GameState.OpenForms.Push(new GameWindow());
 			GameState.CurrentForm.Show();
 		}
 
@@ -49,6 +56,12 @@ namespace Minesweeper
 		public static void ShowLeaderboard()
         {
 			GameState.OpenForms.Push(new Leaderboard());
+			GameState.CurrentForm.Show();
+		}
+
+		public static void ShowPlayerStats()
+		{
+			GameState.OpenForms.Push(new PlayerStats());
 			GameState.CurrentForm.Show();
 		}
 

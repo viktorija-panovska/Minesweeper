@@ -25,23 +25,20 @@ namespace Minesweeper
 		private Board board;        // logical representation of the game board
 		private Tile[,] grid;       // visual representation of the game board
 
-		private Label minesLabel;
-		private Label minesDisplay;
+		private Label remainingMines;  // (# total mines - # flagged squares)
 
 		private Timer timer;
-		private Label timerLabel;
-		private Label timerDisplay;
+		private Label timePassed;
 
 
-		public GameWindow(Difficulty difficulty)
+		public GameWindow()
 		{
 			// Form properties
 			Name = "Minesweeper";
 			BackColor = Color.Gray;
-			ClientSize = new Size((difficulty.BoardWidth * 35) + 100, (difficulty.BoardHeight * 35) + 100);
+			ClientSize = new Size((GameState.Difficulty.BoardWidth * 35) + 100, (GameState.Difficulty.BoardHeight * 35) + 100);
 			StartPosition = FormStartPosition.CenterScreen;
 			FormBorderStyle = FormBorderStyle.None;
-			MaximizeBox = false;
 
 
 			Button exit = new Button()
@@ -57,15 +54,11 @@ namespace Minesweeper
 			exit.MouseClick += new MouseEventHandler(Exit_OnClick);
 
 
-			SetBoard(difficulty);
+			SetBoard();
 
 			SetMinesDisplay();
 
 			SetTimerDisplay();
-
-
-			// Event to shut down the entire program when the window is closed
-			FormClosing += new FormClosingEventHandler(GameWindow_FormClosing);
 		}
 
 
@@ -78,15 +71,16 @@ namespace Minesweeper
 
 		// -- SETUP --
 
-		// Initializes the game board, the tile grid representing the game board and the click events for every tile
-		private void SetBoard(Difficulty difficulty)
+		// Initializes the game board, displays the tile grid representing the game board and
+		// sets up the click events for every tile
+		private void SetBoard()
 		{
-			// initialize visual representation of the board - the grid
-			grid = new Tile[difficulty.BoardHeight, difficulty.BoardWidth];
+			// intialize and fill grid
+			grid = new Tile[GameState.Difficulty.BoardHeight, GameState.Difficulty.BoardWidth];
 
-			for (int y = 0; y < difficulty.BoardHeight; ++y)
+			for (int y = 0; y < GameState.Difficulty.BoardHeight; ++y)
 			{
-				for (int x = 0; x < difficulty.BoardWidth; ++x)
+				for (int x = 0; x < GameState.Difficulty.BoardWidth; ++x)
 				{
 					PictureBox button = new PictureBox()
 					{
@@ -99,18 +93,19 @@ namespace Minesweeper
 				}
 			}
 
-			// populate the board
-			board = new Board(difficulty, GameWon, GameLost, RefreshTile);
+			// populate board
+			board = new Board(GameWon, GameLost, RefreshTile);
 
-			// initialize click events
+			// initialize click events for every tile
 			foreach (Tile tile in grid)
 				tile.Button.MouseClick += new MouseEventHandler((sender, e) => OnClick(sender, e, tile));
 		}
 
-		// Initializes minesLabel and minesDisplay
+		// Displays the number of mines remaining to be marked
+		// (# mines - # flagged squares)
 		private void SetMinesDisplay()
 		{
-			minesLabel = new Label()
+			Label minesLabel = new Label()
 			{
 				Location = new Point(0, 10),
 				Size = new Size(200, 30),
@@ -121,7 +116,7 @@ namespace Minesweeper
 			};
 			Controls.Add(minesLabel);
 
-			minesDisplay = new Label()
+			remainingMines = new Label()
 			{
 				Location = new Point(70, 30),
 				Size = new Size(40, 50),
@@ -130,13 +125,13 @@ namespace Minesweeper
 				Font = new Font("Segoe UI", 15F, FontStyle.Bold, GraphicsUnit.Point),
 				ForeColor = Color.Black
 			};
-			Controls.Add(minesDisplay);
+			Controls.Add(remainingMines);
 		}
 
-		// Initializes timerLabel, timerDisplay and the timer counting every second
+		// Displays the timer in minutes:seconds format
 		private void SetTimerDisplay()
 		{
-			timerLabel = new Label()
+			Label timerLabel = new Label()
 			{
 				Size = new Size(200, 30),
 				Location = new Point(ClientSize.Width - 200, 10),
@@ -152,32 +147,32 @@ namespace Minesweeper
 				Enabled = true,
 				Interval = 1000
 			};
-			timer.Start();
 			timer.Tick += new EventHandler(OnTick);
 
-			timerDisplay = new Label()
+			timePassed = new Label()
 			{
 				Size = new Size(190, 50),
 				Location = new Point(ClientSize.Width - 200, 30),
-				Text = board.PlayTime.ToString(),
+				Text = $"{board.PlayTime / 60:D2}:{board.PlayTime % 60:D2}",
 				TextAlign = ContentAlignment.MiddleCenter,
 				Font = new Font("Segoe UI", 15F, FontStyle.Bold, GraphicsUnit.Point),
 				ForeColor = Color.Black
 			};
-			Controls.Add(timerDisplay);
+			Controls.Add(timePassed);
 		}
 
-		// Increments the timer every second and updates the timerDisplay
+		// Increments the board timer every second and updates the timer display
 		private void OnTick(object sender, EventArgs e)
 		{
 			board.IncrementTime();
-			timerDisplay.Text = board.PlayTime.ToString();
+			timePassed.Text = $"{board.PlayTime / 60:D2}:{board.PlayTime % 60:D2}";
 		}
 
 
 
 		// -- GAMEPLAY --
 	
+		// Handles left or right mouse click events on a tile and checks if a game is won
 		private void OnClick(object sender, MouseEventArgs e, Tile tile)
 		{
 			switch (e.Button)
@@ -190,19 +185,25 @@ namespace Minesweeper
 					FlagTile(tile);
 					break;
 			}
+
+			if (board.IsGameWon())
+				board.GameWon();
 		}
 
+		// Sets the state of the cell in the board to Revealed
 		private void RevealTile(Tile tile)
 		{
 			board.Reveal(tile.X, tile.Y);
 		}
 
+		// Sets the state of the cell in the board to Flagged and modifies the amount of mines remaining
 		private void FlagTile(Tile tile)
 		{
 			board.Flag(tile.X, tile.Y);
-			minesDisplay.Text = board.RemainingMines.ToString();
+			remainingMines.Text = board.RemainingMines.ToString();
 		}
 
+		// Sets a new image for the tile at the given coordinates
 		private void RefreshTile(int x, int y, Image image)
         {
 			grid[y, x].Button.Image = image;
@@ -222,16 +223,6 @@ namespace Minesweeper
 		{
 			timer.Stop();
 			FormSwitcher.ShowGameWon();
-		}
-
-
-
-        // -- UTILITY --
-
-        private void GameWindow_FormClosing(object sender, FormClosingEventArgs e)
-        {
-			if (e.CloseReason == CloseReason.WindowsShutDown)
-				Application.Exit();
 		}
     }
 }

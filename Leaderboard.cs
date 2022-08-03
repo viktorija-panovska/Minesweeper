@@ -7,8 +7,8 @@ namespace Minesweeper
 {
     public class Leaderboard : Form
     {
-        private ListBox scoresDisplay;
-        private List<HighScore>[] scores;
+        private ListView scoreList;
+        private List<Score>[] scores;
         private int scoresIndex;
 
         public Leaderboard()
@@ -20,7 +20,7 @@ namespace Minesweeper
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.None;
 
-            scores = new List<HighScore>[3];
+            scores = new List<Score>[3];
 
             Button exit = new Button()
             {
@@ -37,9 +37,7 @@ namespace Minesweeper
 
             SetDifficultySelect();
 
-            SetScoreOrder();
-
-            SetScores();
+            SetScoreList();
         }
 
 
@@ -88,44 +86,27 @@ namespace Minesweeper
             expert.MouseClick += new MouseEventHandler((sender, e) => OpenList(sender, e, DifficultyName.Expert));
         }
 
-        private void SetScoreOrder()
-        {
-            Button chronologicalOrder = new Button()
-            {
-                Location = new Point(50, 100),
-                Size = new Size(180, 40),
-                Text = "Chronological",
-                TextAlign = ContentAlignment.TopCenter,
-                BackColor = Color.White,
-                Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point)
-            };
-            Controls.Add(chronologicalOrder);
-            chronologicalOrder.MouseClick += new MouseEventHandler(ChronologicalSort);
 
-            Button byTimeOrder = new Button()
-            {
-                Location = new Point(250, 100),
-                Size = new Size(180, 40),
-                Text = "By Play Time",
-                TextAlign = ContentAlignment.TopCenter,
-                BackColor = Color.White,
-                Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point),
-            };
-            Controls.Add(byTimeOrder);
-            byTimeOrder.MouseClick += new MouseEventHandler(TimeSort);
-        }
-
-        private void SetScores()
+        private void SetScoreList()
         {
-            scoresDisplay = new ListBox()
+            scoreList = new ListView()
             {
-                Location = new Point(20, 160),
-                Size = new Size(460, 430),
+                Location = new Point(20, 100),
+                Size = new Size(460, 475),
+                View = View.Details,
+                GridLines = true,
+                Scrollable = true,
                 BackColor = Color.Gray,
-                Font = new Font("Segoe UI", 15F, FontStyle.Regular, GraphicsUnit.Point),
-                SelectionMode = SelectionMode.None
+                Font = new Font("Segoe UI", 15F, FontStyle.Regular, GraphicsUnit.Point)
             };
-            Controls.Add(scoresDisplay);
+
+            scoreList.Columns.Add("Player Name", 152);
+            scoreList.Columns.Add("Date and Time", 152);
+            scoreList.Columns.Add("Play Time", 152);
+
+            scoreList.ColumnClick += new ColumnClickEventHandler(ListSort);
+
+            Controls.Add(scoreList);
 
             OpenList(GameState.Difficulty.Name);
         }
@@ -133,14 +114,14 @@ namespace Minesweeper
 
         private void UpdateScoresDisplay()
         {
-            scoresDisplay.Items.Clear();
-
-            scoresDisplay.Items.Add($"{"DATE",18} {"PLAY TIME",42}");
+            scoreList.Items.Clear();
 
             foreach (var score in scores[scoresIndex])
-                scoresDisplay.Items.Add($"{score.DateTime.Day:D2}:{score.DateTime.Month:D2}:{score.DateTime.Year:D4}  " +
-                    $"{score.DateTime.Hour:D2}:{score.DateTime.Minute:D2}:{score.DateTime.Second:D2}" +
-                    $"{score.PlayTime + "s",30}");
+                scoreList.Items.Add(new ListViewItem(new string[] { 
+                    score.PlayerName, 
+                    $"{score.DateTime:dd}:{score.DateTime:MM}:{score.DateTime:yy}  {score.DateTime:HH}:{score.DateTime:mm}", 
+                    $"{score.PlayTime / 60}:{score.PlayTime % 60}"
+                }));
         }
 
         private void OpenList(DifficultyName difficulty)
@@ -148,7 +129,7 @@ namespace Minesweeper
             scoresIndex = (int)difficulty;
 
             if (scores[scoresIndex] == null)
-                scores[scoresIndex] = ScoreManager.LoadScores(difficulty);
+                scores[scoresIndex] = SaveFileManager.LoadScores(difficulty);
 
             UpdateScoresDisplay();
         }
@@ -159,15 +140,21 @@ namespace Minesweeper
         }
 
 
-        private void ChronologicalSort(object sender, MouseEventArgs e)
+        private void ListSort(object sender, ColumnClickEventArgs e)
         {
-            scores[scoresIndex].Sort((a, b) => a.DateTime.CompareTo(b.DateTime));
-            UpdateScoresDisplay();
-        }
+            switch (e.Column)
+            {
+                case 0:
+                    scores[scoresIndex].Sort((a, b) => a.PlayerName.CompareTo(b.PlayerName));
+                    break;
+                case 1:
+                    scores[scoresIndex].Sort((a, b) => a.DateTime.CompareTo(b.DateTime));
+                    break;
+                case 2:
+                    scores[scoresIndex].Sort((a, b) => a.PlayTime.CompareTo(b.PlayTime));
+                    break;
+            }
 
-        private void TimeSort(object sender, MouseEventArgs e)
-        {
-            scores[scoresIndex].Sort((a, b) => a.PlayTime.CompareTo(b.PlayTime));
             UpdateScoresDisplay();
         }
     }

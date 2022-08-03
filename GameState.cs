@@ -23,9 +23,14 @@ namespace Minesweeper
 
     public static class GameState
     {
+        // Forms properties
         public static Stack<Form> OpenForms { get; set; }
 
         public static Form CurrentForm { get => OpenForms.Peek(); }
+
+
+        // Player properties
+        public static string PlayerName { get; set; }
 
         public static Difficulty Difficulty { get; set; }
     }
