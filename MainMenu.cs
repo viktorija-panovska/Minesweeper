@@ -44,8 +44,8 @@ namespace Minesweeper
 
             Label title = new Label()
             {
-                Location = new Point(75, 50),
-                Size = new Size(350, 50),
+                Location = new Point(0, 50),
+                Size = new Size(500, 50),
                 Text = "MINESWEEPER",
                 TextAlign = ContentAlignment.MiddleCenter,
                 Font = new Font("Segoe UI", 30F, FontStyle.Bold, GraphicsUnit.Point),

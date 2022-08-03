@@ -204,6 +204,7 @@ namespace Minesweeper
 		// Reveals the locations of all the mines, then goes to the Game Lost screen
 		public void GameLost()
         {
+			SaveScore();
 			RevealMines(0, Height - 1, threadCount);
 			gameLost();
         }
@@ -249,16 +250,22 @@ namespace Minesweeper
 		// Saves the score and goes to the Game Won screen
 		public void GameWon()
         {
-			SaveFileManager.SaveScore(new Score()
-			{
-				Difficulty = GameState.Difficulty.Name,
-				PlayerName = GameState.PlayerName,
-				DateTime = DateTime.Now,
-				PlayTime = PlayTime,
-				CorrectlyMarkedMines = correctlyFlagged
-			});
+			SaveScore();
 
 			gameWon();
         }
+
+		private void SaveScore()
+        {
+			SaveFileManager.SaveScore(new Score()
+			{
+				PlayerName = GameState.PlayerName,
+				DateTime = DateTime.Now,
+				PlayTime = PlayTime,
+				Difficulty = GameState.Difficulty.Name,
+				TotalMines = GameState.Difficulty.Mines,
+				CorrectlyMarkedMines = correctlyFlagged
+			});
+		}
 	}
 }

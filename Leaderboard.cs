@@ -8,8 +8,9 @@ namespace Minesweeper
     public class Leaderboard : Form
     {
         private ListView scoreList;
-        private List<Score>[] scores;
+        private List<Score>[] scores = new List<Score>[3];   // 0 - beginner scores, 1 - intermediate scores, 2 - expert scores
         private int scoresIndex;
+
 
         public Leaderboard()
         {
@@ -19,8 +20,6 @@ namespace Minesweeper
             ClientSize = new Size(500, 600);
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.None;
-
-            scores = new List<Score>[3];
 
             Button exit = new Button()
             {
@@ -47,6 +46,8 @@ namespace Minesweeper
         }
 
 
+        // Displays the buttons for selecting the difficulty of scores to show on the leaderboard
+        // and sets up the mouse click events
         private void SetDifficultySelect()
         {
             Button beginner = new Button()
@@ -86,13 +87,13 @@ namespace Minesweeper
             expert.MouseClick += new MouseEventHandler((sender, e) => OpenList(sender, e, DifficultyName.Expert));
         }
 
-
+        // Displays the list of scores and sets the click events for sorting the list by different paramenters
         private void SetScoreList()
         {
             scoreList = new ListView()
             {
                 Location = new Point(20, 100),
-                Size = new Size(460, 475),
+                Size = new Size(460, 472),
                 View = View.Details,
                 GridLines = true,
                 Scrollable = true,
@@ -102,7 +103,7 @@ namespace Minesweeper
 
             scoreList.Columns.Add("Player Name", 152);
             scoreList.Columns.Add("Date and Time", 152);
-            scoreList.Columns.Add("Play Time", 152);
+            scoreList.Columns.Add("Play Time", 135);
 
             scoreList.ColumnClick += new ColumnClickEventHandler(ListSort);
 
@@ -112,6 +113,7 @@ namespace Minesweeper
         }
 
 
+        // Populates the score list with scores of the currently selected difficulty
         private void UpdateScoresDisplay()
         {
             scoreList.Items.Clear();
@@ -120,10 +122,11 @@ namespace Minesweeper
                 scoreList.Items.Add(new ListViewItem(new string[] { 
                     score.PlayerName, 
                     $"{score.DateTime:dd}:{score.DateTime:MM}:{score.DateTime:yy}  {score.DateTime:HH}:{score.DateTime:mm}", 
-                    $"{score.PlayTime / 60}:{score.PlayTime % 60}"
+                    $"{score.PlayTime / 60}:{score.PlayTime % 60:D2}"
                 }));
         }
 
+        // If the scores haven't been read yet, reads scores of the given difficulty from the save file
         private void OpenList(DifficultyName difficulty)
         {
             scoresIndex = (int)difficulty;
@@ -140,6 +143,7 @@ namespace Minesweeper
         }
 
 
+        // Sorts the scores depending on the clicked column
         private void ListSort(object sender, ColumnClickEventArgs e)
         {
             switch (e.Column)

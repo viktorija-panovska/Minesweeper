@@ -8,13 +8,15 @@ namespace Minesweeper
 	[Serializable]
 	public class Score
 	{
-		public DifficultyName Difficulty { get; set; }
-
 		public string PlayerName { get; set; }
 
 		public DateTime DateTime { get; set; }
 
 		public int PlayTime { get; set; }
+
+		public DifficultyName Difficulty { get; set; }
+
+		public int TotalMines { get; set; }
 
 		public int CorrectlyMarkedMines { get; set; }
 	}
@@ -73,9 +75,8 @@ namespace Minesweeper
 		// Returns a list of scores from games of the given difficulty played by given player, read from an XML file
 		public static List<Score> LoadScores(DifficultyName difficulty, string playerName)
 		{
-			if (lastUpdatedPlayer != null &&
-				lastUpdatedPlayer.Count != 0 &&
-				lastUpdatedPlayer[0].PlayerName == playerName)
+			if (lastUpdatedPlayer != null && lastUpdatedPlayer.Count != 0 &&
+				lastUpdatedPlayer[0].PlayerName == playerName && lastUpdatedPlayer[0].Difficulty == difficulty)
 				return lastUpdatedPlayer;
 
 			return DeserializeFromXml(GetPath(difficulty, playerName));
@@ -83,11 +84,13 @@ namespace Minesweeper
 
 
 
-		// Saves the score to the XML file for scores from games of the same difficulty and games from the same player
+		// Saves the score to the XML file of the player and if it's a won game, to the leaderboard too
 		public static void SaveScore(Score score)
 		{
-			lastUpdatedScores = SaveTo(score, scoresFolderPath, GetPath(score.Difficulty));
 			lastUpdatedPlayer = SaveTo(score, playerFolderPath, GetPath(score.Difficulty, score.PlayerName));
+
+			if (score.CorrectlyMarkedMines == score.TotalMines)
+				lastUpdatedScores = SaveTo(score, scoresFolderPath, GetPath(score.Difficulty));
 		}
 
 		// Saves score to a given XML file and returns a list of scores in that XML file
