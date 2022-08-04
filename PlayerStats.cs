@@ -164,14 +164,54 @@ namespace Minesweeper
                     scores[scoresIndex].Sort((a, b) => a.DateTime.CompareTo(b.DateTime));
                     break;
                 case 1:
-                    scores[scoresIndex].Sort((a, b) => a.PlayTime.CompareTo(b.PlayTime));
+                    scores[scoresIndex].Sort((a, b) => CompareByPlayTime(a, b));
                     break;
                 case 2:
-                    scores[scoresIndex].Sort((a, b) => b.CorrectlyMarkedMines.CompareTo(a.CorrectlyMarkedMines));
+                    scores[scoresIndex].Sort((a, b) => CompareByCorrectlyMarked(a, b));
                     break;
             }
 
             UpdateScoresDisplay();
+        }
+
+        private int CompareByPlayTime(Score a, Score b)
+        {
+            // wins are shown first
+            if (a.CorrectlyMarkedMines == a.TotalMines && b.CorrectlyMarkedMines != b.TotalMines)
+                return -1;
+            else if (b.CorrectlyMarkedMines == b.TotalMines && a.CorrectlyMarkedMines != a.TotalMines)
+                return 1;
+            else
+            {
+                if (a.PlayTime.CompareTo(b.PlayTime) != 0)
+                    return a.PlayTime.CompareTo(b.PlayTime);
+                else
+                {
+                    if (b.CorrectlyMarkedMines.CompareTo(a.CorrectlyMarkedMines) != 0)
+                        return b.CorrectlyMarkedMines.CompareTo(a.CorrectlyMarkedMines);
+                    else
+                        return 0;
+                }
+
+            }
+        }
+
+        private int CompareByCorrectlyMarked(Score a, Score b)
+        {
+            if (b.CorrectlyMarkedMines.CompareTo(a.CorrectlyMarkedMines) != 0)
+                return b.CorrectlyMarkedMines.CompareTo(a.CorrectlyMarkedMines);
+            else
+            {
+                if (a.DateTime.CompareTo(b.DateTime) != 0)
+                    return a.DateTime.CompareTo(b.DateTime);
+                else
+                {
+                    if (a.PlayTime.CompareTo(b.PlayTime) != 0)
+                        return a.PlayTime.CompareTo(b.PlayTime);
+                    else
+                        return 0;
+                }
+            }
         }
     }
 }

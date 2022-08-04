@@ -152,7 +152,7 @@ namespace Minesweeper
                     scores[scoresIndex].Sort((a, b) => a.PlayerName.CompareTo(b.PlayerName));
                     break;
                 case 1:
-                    scores[scoresIndex].Sort((a, b) => a.DateTime.CompareTo(b.DateTime));
+                    scores[scoresIndex].Sort((a, b) => b.DateTime.CompareTo(a.DateTime));
                     break;
                 case 2:
                     scores[scoresIndex].Sort((a, b) => a.PlayTime.CompareTo(b.PlayTime));
