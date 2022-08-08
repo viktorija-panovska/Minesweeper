@@ -10,15 +10,14 @@ namespace Minesweeper
 		public delegate void RefreshCellDisplay(int x, int y, Image image);
 
 		private readonly Cell[,] board;
-		private readonly object boardLocker;
+		private readonly object[,] cellsLocks;
+		private readonly int threadCount;
 
 		public int Width { get => GameState.Difficulty.BoardWidth; }
 		public int Height { get => GameState.Difficulty.BoardHeight; }
 		public int Mines { get => GameState.Difficulty.Mines; }
 		public int RemainingMines { get => GameState.Difficulty.Mines - flagged; }
 		public int PlayTime { get; private set; }
-
-		private const int threadCount = 8;
 
 		private int flagged;
 		private int correctlyFlagged;
@@ -31,7 +30,8 @@ namespace Minesweeper
 		public Board(GameOverFunc gameWon, GameOverFunc gameLost, RefreshCellDisplay refresh)
 		{
 			board = new Cell[Height, Width];
-			boardLocker = new object();
+			cellsLocks = new object[Height, Width];
+			threadCount = Environment.ProcessorCount;
 
 			flagged = 0;
 			correctlyFlagged = 0;
@@ -80,7 +80,10 @@ namespace Minesweeper
 				int x = ranGen.Next(0, Width);
 				int y = ranGen.Next(0, Height);
 
-				lock (boardLocker)
+				if (cellsLocks[y, x] == null)
+					cellsLocks[y, x] = new object();
+
+				lock (cellsLocks[y, x])
                 {
 					if (board[y, x] == null)
 					{
